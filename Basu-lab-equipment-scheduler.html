@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basu Lab Equipment Scheduler</title>
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --bg: #F0F2F5;
+      --surface: #FFFFFF;
+      --border: #D8DCE3;
+      --text: #1A1D23;
+      --muted: #6B7280;
+      --accent: #2563EB;
+      --accent-dk: #1D4ED8;
+      --danger: #DC2626;
+      --success: #16A34A;
+      --radius: 6px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .10), 0 1px 2px rgba(0, 0, 0, .06);
+
+      /* equipment palette — up to 10 */
+      --eq0: #2563EB;
+      --eq0t: #DBEAFE;
+      --eq1: #7C3AED;
+      --eq1t: #EDE9FE;
+      --eq2: #DB2777;
+      --eq2t: #FCE7F3;
+      --eq3: #D97706;
+      --eq3t: #FEF3C7;
+      --eq4: #059669;
+      --eq4t: #D1FAE5;
+      --eq5: #0891B2;
+      --eq5t: #CFFAFE;
+      --eq6: #65A30D;
+      --eq6t: #ECFCCB;
+      --eq7: #E11D48;
+      --eq7t: #FFE4E6;
+      --eq8: #9333EA;
+      --eq8t: #F3E8FF;
+      --eq9: #0D9488;
+      --eq9t: #CCFBF1;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── PASSWORD SCREEN ─────────────────────────────────── */
+    #lock-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    .lock-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 40px 48px;
+      width: 360px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .lock-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .lock-icon svg {
+      color: #fff;
+    }
+
+    .lock-card h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .lock-card p {
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+
+    .lock-card input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .lock-card input:focus {
+      border-color: var(--accent);
+    }
+
+    .lock-error {
+      color: var(--danger);
+      font-size: 13px;
+      margin-bottom: 10px;
+      min-height: 18px;
+    }
+
+    /* ── BUTTONS ─────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: background .15s, opacity .15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dk);
+    }
+
+    .btn-sm {
+      padding: 5px 11px;
+      font-size: 12px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg);
+    }
+
+    .btn-danger-ghost {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid #FECACA;
+    }
+
+    .btn-danger-ghost:hover {
+      background: #FEF2F2;
+    }
+
+    /* ── APP SHELL ───────────────────────────────────────── */
+    #app {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header-logo svg {
+      color: #fff;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    header .header-sub {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    /* ── MAIN LAYOUT ─────────────────────────────────────── */
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0;
+      flex: 1;
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────────── */
+    aside {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+    }
+
+    .sidebar-section h2 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .eq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eq-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background .1s;
+    }
+
+    .eq-item:hover {
+      background: var(--bg);
+    }
+
+    .eq-item.active {
+      background: var(--bg);
+    }
+
+    .eq-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .eq-name {
+      flex: 1;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .eq-del {
+      opacity: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 2px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      transition: opacity .15s, color .15s;
+    }
+
+    .eq-item:hover .eq-del {
+      opacity: 1;
+    }
+
+    .eq-del:hover {
+      color: var(--danger);
+    }
+
+    .add-eq-form {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .add-eq-form input {
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .add-eq-form input:focus {
+      border-color: var(--accent);
+    }
+
+    /* ── MAIN CONTENT ────────────────────────────────────── */
+    main {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── CALENDAR HEADER ─────────────────────────────────── */
+    .cal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .cal-header h2 {
+      font-size: 17px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .week-nav button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background .1s;
+    }
+
+    .week-nav button:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .week-nav .today-btn {
+      width: auto;
+      padding: 0 12px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    /* ── WEEKLY GRID ─────────────────────────────────────── */
+    .cal-grid-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: 64px repeat(7, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cal-day-header {
+      padding: 10px 8px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .cal-day-header:last-child {
+      border-right: none;
+    }
+
+    .cal-day-header .dow {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+    }
+
+    .cal-day-header .dom {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .cal-day-header.today .dom {
+      color: var(--accent);
+    }
+
+    .cal-day-header.corner {
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+    }
+
+    /* time rows */
+    .cal-body {
+      display: grid;
+      grid-template-columns: 64px repeat(7, 1fr);
+      max-height: calc(100vh - 230px);
+      overflow-y: auto;
+    }
+
+    .time-label {
+      padding: 0 8px;
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      height: 48px;
+      display: flex;
+      align-items: flex-start;
+      padding-top: 4px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      left: 0;
+      background: var(--surface);
+    }
+
+    .day-col {
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      height: 48px;
+      position: relative;
+      cursor: pointer;
+      transition: background .1s;
+    }
+
+    .day-col:last-child {
+      border-right: none;
+    }
+
+    .day-col:hover {
+      background: #F8FAFF;
+    }
+
+    .booking-block {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      border-radius: 4px;
+      padding: 2px 5px;
+      font-size: 11px;
+      font-weight: 500;
+      overflow: hidden;
+      cursor: pointer;
+      z-index: 10;
+      line-height: 1.3;
+      border-left: 3px solid;
+    }
+
+    .booking-block:hover {
+      filter: brightness(.94);
+    }
+
+    /* ── BOOKING MODAL ───────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .35);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 28px;
+      width: 420px;
+      max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+    }
+
+    .modal h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+
+    .form-row label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .15s;
+      background: var(--surface);
+    }
+
+    .form-row input:focus,
+    .form-row select:focus,
+    .form-row textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .form-row textarea {
+      resize: vertical;
+      min-height: 64px;
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .conflict-warn {
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #92400E;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .conflict-warn.visible {
+      display: block;
+    }
+
+    /* ── TOAST ───────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1A1D23;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── VIEW BOOKING MODAL ──────────────────────────────── */
+    .booking-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .detail-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: var(--muted);
+      width: 80px;
+      flex-shrink: 0;
+      padding-top: 1px;
+    }
+
+    .detail-val {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .eq-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* ── LOADING ─────────────────────────────────────────── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .empty-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 13px;
+      grid-column: 1 / -1;
+      gap: 6px;
+    }
+
+    @media (max-width: 700px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOADING -->
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <span style="font-size:13px;color:var(--muted)">Loading…</span>
+  </div>
+
+  <!-- PASSWORD SCREEN -->
+  <div id="lock-screen" style="display:none">
+    <div class="lock-card">
+      <div class="lock-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      </div>
+      <h1>Basu Lab Equipment Scheduler</h1>
+      <p>Enter the lab password to continue</p>
+      <input type="password" id="pw-input" placeholder="Password" autocomplete="current-password" />
+      <div class="lock-error" id="pw-error"></div>
+      <button class="btn btn-primary" onclick="checkPassword()">Enter</button>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app">
+    <header>
+      <div class="header-logo">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path
+            d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
+        </svg>
+      </div>
+      <h1>Lab Scheduler <span class="header-sub" id="header-week-label"></span></h1>
+      <button class="btn btn-ghost btn-sm" onclick="openBookingModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 5v14m-7-7h14" />
+        </svg>
+        New booking
+      </button>
+    </header>
+
+    <div class="layout">
+      <aside>
+        <div class="sidebar-section">
+          <h2>Equipment</h2>
+          <div class="eq-list" id="eq-list"></div>
+        </div>
+        <div class="sidebar-section">
+          <h2>Add Equipment</h2>
+          <div class="add-eq-form">
+            <input type="text" id="new-eq-name" placeholder="Equipment name" maxlength="40" />
+            <button class="btn btn-primary btn-sm" onclick="addEquipment()">Add</button>
+          </div>
+        </div>
+      </aside>
+
+      <main>
+        <div class="cal-header">
+          <h2 id="week-title"></h2>
+          <div class="week-nav">
+            <button onclick="changeWeek(-1)" title="Previous week">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button class="today-btn" onclick="goToToday()">Today</button>
+            <button onclick="changeWeek(1)" title="Next week">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="cal-grid-wrap">
+          <div class="cal-grid" id="cal-headers"></div>
+          <div class="cal-body" id="cal-body"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- BOOKING MODAL (create) -->
+  <div class="modal-overlay" id="booking-modal">
+    <div class="modal">
+      <h3 id="booking-modal-title">New Booking</h3>
+      <div class="form-row">
+        <label>Your name</label>
+        <input type="text" id="b-name" placeholder="e.g. Dr. Smith" />
+      </div>
+      <div class="form-row">
+        <label>Equipment</label>
+        <select id="b-equip"></select>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0">
+          <label>Date</label>
+          <input type="date" id="b-date" />
+        </div>
+        <div class="form-row" style="margin:0">
+          <label>Start time</label>
+          <input type="time" id="b-start" />
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <label>Duration</label>
+        <select id="b-duration">
+          <option value="0.5">30 minutes</option>
+          <option value="1" selected>1 hour</option>
+          <option value="1.5">1.5 hours</option>
+          <option value="2">2 hours</option>
+          <option value="3">3 hours</option>
+          <option value="4">4 hours</option>
+          <option value="6">6 hours</option>
+          <option value="8">8 hours (full day)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Notes (optional)</label>
+        <textarea id="b-notes" placeholder="Experiment details, special setup…"></textarea>
+      </div>
+      <div class="conflict-warn" id="conflict-warn">
+        ⚠️ This time slot overlaps with an existing booking for this equipment.
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeBookingModal()">Cancel</button>
+        <button class="btn btn-primary" style="width:auto;padding:8px 20px" onclick="saveBooking()">Save
+          booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW/DELETE BOOKING MODAL -->
+  <div class="modal-overlay" id="view-modal">
+    <div class="modal">
+      <h3>Booking details</h3>
+      <div class="booking-detail" id="view-details"></div>
+      <div class="modal-actions" id="view-actions">
+        <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="deleteCurrentBooking()">Cancel booking</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // ── CONFIG ────────────────────────────────────────────────
+    const PASSWORD = "Drop-seq"; // ← change this to your password
+
+    const STORAGE_KEY = "lab_scheduler_data_v1";
+    const HOURS_START = 7;   // 7am
+    const HOURS_END = 22;  // 10pm
+    const COLORS = [
+      { bg: "var(--eq0t)", border: "var(--eq0)", dot: "#2563EB" },
+      { bg: "var(--eq1t)", border: "var(--eq1)", dot: "#7C3AED" },
+      { bg: "var(--eq2t)", border: "var(--eq2)", dot: "#DB2777" },
+      { bg: "var(--eq3t)", border: "var(--eq3)", dot: "#D97706" },
+      { bg: "var(--eq4t)", border: "var(--eq4)", dot: "#059669" },
+      { bg: "var(--eq5t)", border: "var(--eq5)", dot: "#0891B2" },
+      { bg: "var(--eq6t)", border: "var(--eq6)", dot: "#65A30D" },
+      { bg: "var(--eq7t)", border: "var(--eq7)", dot: "#E11D48" },
+      { bg: "var(--eq8t)", border: "var(--eq8)", dot: "#9333EA" },
+      { bg: "var(--eq9t)", border: "var(--eq9)", dot: "#0D9488" },
+    ];
+
+    // ── STATE ─────────────────────────────────────────────────
+    let data = { equipment: [], bookings: [] };
+    let weekOffset = 0;
+    let viewingBookingId = null;
+
+    // ── STORAGE ───────────────────────────────────────────────
+    async function loadData() {
+      try {
+        const res = await window.storage.get(STORAGE_KEY, true);
+        if (res && res.value) data = JSON.parse(res.value);
+        if (!data.equipment) data.equipment = [];
+        if (!data.bookings) data.bookings = [];
+      } catch (e) {
+        // first load — start fresh
+        data = { equipment: [], bookings: [] };
+      }
+    }
+
+    async function saveData() {
+      try {
+        await window.storage.set(STORAGE_KEY, JSON.stringify(data), true);
+      } catch (e) { console.error("Save failed", e); }
+    }
+
+    // ── PASSWORD ──────────────────────────────────────────────
+    function checkPassword() {
+      const val = document.getElementById("pw-input").value;
+      if (val === PASSWORD) {
+        sessionStorage.setItem("lab_auth", "1");
+        showApp();
+      } else {
+        const el = document.getElementById("pw-error");
+        el.textContent = "Incorrect password. Try again.";
+        document.getElementById("pw-input").value = "";
+        document.getElementById("pw-input").focus();
+        setTimeout(() => { el.textContent = ""; }, 3000);
+      }
+    }
+
+    document.getElementById("pw-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") checkPassword();
+    });
+
+    // ── BOOT ──────────────────────────────────────────────────
+    async function boot() {
+      await loadData();
+      document.getElementById("loading").style.display = "none";
+
+      if (sessionStorage.getItem("lab_auth") === "1") {
+        showApp();
+      } else {
+        document.getElementById("lock-screen").style.display = "flex";
+      }
+    }
+
+    function showApp() {
+      document.getElementById("lock-screen").style.display = "none";
+      document.getElementById("app").style.display = "flex";
+      renderSidebar();
+      renderCalendar();
+      // Poll for updates every 30s
+      setInterval(async () => {
+        await loadData();
+        renderSidebar();
+        renderCalendar();
+      }, 30000);
+    }
+
+    boot();
+
+    // ── WEEK HELPERS ──────────────────────────────────────────
+    function getWeekDates(offset = 0) {
+      const now = new Date();
+      const day = now.getDay(); // 0=Sun
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - ((day + 6) % 7) + offset * 7);
+      monday.setHours(0, 0, 0, 0);
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        return d;
+      });
+    }
+
+    function dateKey(d) {
+      return d.toISOString().slice(0, 10);
+    }
+
+    function fmt12(h, m) {
+      const ampm = h >= 12 ? "pm" : "am";
+      const hr = h % 12 || 12;
+      return `${hr}:${String(m).padStart(2, "0")}${ampm}`;
+    }
+
+    function fmtDateFull(d) {
+      return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    }
+
+    // ── EQUIPMENT ─────────────────────────────────────────────
+    function eqColor(idx) { return COLORS[idx % COLORS.length]; }
+
+    function renderSidebar() {
+      const list = document.getElementById("eq-list");
+      if (!data.equipment.length) {
+        list.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:4px 8px">No equipment yet</div>`;
+        return;
+      }
+      list.innerHTML = data.equipment.map((eq, i) => {
+        const c = eqColor(i);
+        return `<div class="eq-item">
+      <span class="eq-dot" style="background:${c.dot}"></span>
+      <span class="eq-name">${escHtml(eq.name)}</span>
+      <button class="eq-del" onclick="deleteEquipment('${eq.id}')" title="Remove">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>`;
+      }).join("");
+    }
+
+    async function addEquipment() {
+      const inp = document.getElementById("new-eq-name");
+      const name = inp.value.trim();
+      if (!name) return;
+      if (data.equipment.length >= 10) { showToast("Max 10 equipment items"); return; }
+      data.equipment.push({ id: uid(), name });
+      inp.value = "";
+      await saveData();
+      renderSidebar();
+      renderCalendar();
+      showToast(`"${name}" added`);
+    }
+
+    document.getElementById("new-eq-name").addEventListener("keydown", e => {
+      if (e.key === "Enter") addEquipment();
+    });
+
+    async function deleteEquipment(id) {
+      const eq = data.equipment.find(e => e.id === id);
+      if (!eq) return;
+      if (!confirm(`Remove "${eq.name}"? Future bookings for this equipment will also be removed.`)) return;
+      data.equipment = data.equipment.filter(e => e.id !== id);
+      data.bookings = data.bookings.filter(b => b.equipId !== id);
+      await saveData();
+      renderSidebar();
+      renderCalendar();
+      showToast(`"${eq.name}" removed`);
+    }
+
+    // ── CALENDAR ──────────────────────────────────────────────
+    function changeWeek(delta) { weekOffset += delta; renderCalendar(); }
+    function goToToday() { weekOffset = 0; renderCalendar(); }
+
+    function renderCalendar() {
+      const days = getWeekDates(weekOffset);
+      const today = dateKey(new Date());
+
+      // week title
+      const opts = { month: "long", day: "numeric" };
+      const yr = days[0].getFullYear();
+      const endYr = days[6].getFullYear();
+      const title = `${days[0].toLocaleDateString("en-US", opts)} – ${days[6].toLocaleDateString("en-US", opts)}${endYr !== yr ? " " + endYr : ""}, ${yr}`;
+      document.getElementById("week-title").textContent = title;
+      document.getElementById("header-week-label").textContent = weekOffset === 0 ? "· This week" : "";
+
+      const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+      // headers
+      const hdr = document.getElementById("cal-headers");
+      hdr.innerHTML = `<div class="cal-day-header corner"></div>` +
+        days.map((d, i) => {
+          const isToday = dateKey(d) === today;
+          return `<div class="cal-day-header${isToday ? " today" : ""}">
+        <div class="dow">${DOW[i]}</div>
+        <div class="dom">${d.getDate()}</div>
+      </div>`;
+        }).join("");
+
+      // body
+      const body = document.getElementById("cal-body");
+      let html = "";
+
+      for (let h = HOURS_START; h < HOURS_END; h++) {
+        const label = fmt12(h, 0);
+        html += `<div class="time-label">${label}</div>`;
+        for (let di = 0; di < 7; di++) {
+          const dk = dateKey(days[di]);
+          html += `<div class="day-col" data-date="${dk}" data-hour="${h}" onclick="handleColClick(this)"></div>`;
+        }
+      }
+
+      body.innerHTML = html;
+
+      // place bookings
+      const hourPx = 48; // matches .day-col height
+
+      data.bookings.forEach(b => {
+        const eqIdx = data.equipment.findIndex(e => e.id === b.equipId);
+        if (eqIdx === -1) return;
+        const c = eqColor(eqIdx);
+        const eq = data.equipment[eqIdx];
+
+        // find matching col
+        const col = body.querySelector(`.day-col[data-date="${b.date}"][data-hour="${b.startHour}"]`);
+        if (!col) return;
+
+        const top = b.startMin / 60 * hourPx;
+        const height = Math.max(b.durationH * hourPx - 2, 14);
+
+        const block = document.createElement("div");
+        block.className = "booking-block";
+        block.style.cssText = `top:${top}px;height:${height}px;background:${c.bg};border-left-color:${c.dot};color:${c.dot}`;
+        block.innerHTML = `<strong>${escHtml(eq.name)}</strong><br>${escHtml(b.name)}`;
+        block.title = `${eq.name} · ${b.name}`;
+        block.addEventListener("click", e => { e.stopPropagation(); openViewModal(b.id); });
+
+        col.appendChild(block);
+      });
+    }
+
+    function handleColClick(el) {
+      const date = el.dataset.date;
+      const hour = parseInt(el.dataset.hour);
+      openBookingModal(date, hour);
+    }
+
+    // ── BOOKING MODAL ─────────────────────────────────────────
+    function openBookingModal(date, hour) {
+      const sel = document.getElementById("b-equip");
+      sel.innerHTML = data.equipment.length
+        ? data.equipment.map(e => `<option value="${e.id}">${escHtml(e.name)}</option>`).join("")
+        : `<option value="">— add equipment first —</option>`;
+
+      if (date) document.getElementById("b-date").value = date;
+      else {
+        const today = new Date();
+        document.getElementById("b-date").value = dateKey(today);
+      }
+      if (hour !== undefined) {
+        document.getElementById("b-start").value = `${String(hour).padStart(2, "0")}:00`;
+      } else {
+        document.getElementById("b-start").value = "09:00";
+      }
+
+      document.getElementById("conflict-warn").classList.remove("visible");
+      document.getElementById("b-name").value = "";
+      document.getElementById("b-notes").value = "";
+      document.getElementById("booking-modal").classList.add("open");
+      document.getElementById("b-name").focus();
+    }
+
+    function closeBookingModal() {
+      document.getElementById("booking-modal").classList.remove("open");
+    }
+
+    async function saveBooking() {
+      const name = document.getElementById("b-name").value.trim();
+      const equipId = document.getElementById("b-equip").value;
+      const date = document.getElementById("b-date").value;
+      const startStr = document.getElementById("b-start").value;
+      const durH = parseFloat(document.getElementById("b-duration").value);
+      const notes = document.getElementById("b-notes").value.trim();
+
+      if (!name) { alert("Please enter your name."); return; }
+      if (!equipId) { alert("Please select equipment."); return; }
+      if (!date) { alert("Please select a date."); return; }
+      if (!startStr) { alert("Please select a start time."); return; }
+
+      const [sh, sm] = startStr.split(":").map(Number);
+
+      // conflict check
+      const conflict = data.bookings.find(b => {
+        if (b.equipId !== equipId || b.date !== date) return false;
+        const bStart = b.startHour * 60 + b.startMin;
+        const bEnd = bStart + b.durationH * 60;
+        const nStart = sh * 60 + sm;
+        const nEnd = nStart + durH * 60;
+        return nStart < bEnd && nEnd > bStart;
+      });
+
+      document.getElementById("conflict-warn").classList.toggle("visible", !!conflict);
+      if (conflict) return;
+
+      const booking = { id: uid(), name, equipId, date, startHour: sh, startMin: sm, durationH: durH, notes };
+      data.bookings.push(booking);
+
+      // refresh data first in case others have added bookings
+      await loadData();
+      data.bookings.push(booking);
+      await saveData();
+
+      closeBookingModal();
+      renderCalendar();
+      showToast("Booking saved!");
+    }
+
+    // ── VIEW MODAL ────────────────────────────────────────────
+    function openViewModal(id) {
+      const b = data.bookings.find(x => x.id === id);
+      if (!b) return;
+      const eqIdx = data.equipment.findIndex(e => e.id === b.equipId);
+      const eq = eqIdx !== -1 ? data.equipment[eqIdx] : { name: "Unknown" };
+      const c = eqIdx !== -1 ? eqColor(eqIdx) : { bg: "#eee", dot: "#999" };
+
+      const endMin = b.startHour * 60 + b.startMin + b.durationH * 60;
+      const endH = Math.floor(endMin / 60);
+      const endM = endMin % 60;
+      const timeStr = `${fmt12(b.startHour, b.startMin)} – ${fmt12(endH, endM)}`;
+
+      const dateObj = new Date(b.date + "T00:00:00");
+
+      document.getElementById("view-details").innerHTML = `
+    <div class="detail-row">
+      <span class="detail-label">Equipment</span>
+      <span class="detail-val">
+        <span class="eq-badge" style="background:${c.bg};color:${c.dot}">
+          <span style="width:7px;height:7px;border-radius:50%;background:${c.dot};display:inline-block"></span>
+          ${escHtml(eq.name)}
+        </span>
+      </span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Booked by</span>
+      <span class="detail-val">${escHtml(b.name)}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Date</span>
+      <span class="detail-val">${fmtDateFull(dateObj)}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Time</span>
+      <span class="detail-val">${timeStr}</span>
+    </div>
+    ${b.notes ? `<div class="detail-row">
+      <span class="detail-label">Notes</span>
+      <span class="detail-val">${escHtml(b.notes)}</span>
+    </div>` : ""}
+  `;
+
+      viewingBookingId = id;
+      document.getElementById("view-modal").classList.add("open");
+    }
+
+    function closeViewModal() {
+      document.getElementById("view-modal").classList.remove("open");
+      viewingBookingId = null;
+    }
+
+    async function deleteCurrentBooking() {
+      if (!viewingBookingId) return;
+      const b = data.bookings.find(x => x.id === viewingBookingId);
+      const eq = b ? data.equipment.find(e => e.id === b.equipId) : null;
+      const label = eq ? `"${eq.name}" by ${b.name}` : "this booking";
+      if (!confirm(`Cancel ${label}?`)) return;
+
+      await loadData();
+      data.bookings = data.bookings.filter(x => x.id !== viewingBookingId);
+      await saveData();
+      closeViewModal();
+      renderCalendar();
+      showToast("Booking cancelled");
+    }
+
+    // close modals on overlay click
+    document.getElementById("booking-modal").addEventListener("click", function (e) {
+      if (e.target === this) closeBookingModal();
+    });
+    document.getElementById("view-modal").addEventListener("click", function (e) {
+      if (e.target === this) closeViewModal();
+    });
+
+    // ── UTILS ─────────────────────────────────────────────────
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 2500);
+    }
+  </script>
+</body>
+
+</html>
