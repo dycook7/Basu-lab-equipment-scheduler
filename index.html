@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab Equipment Scheduler</title>
+<title>Basu Lab Equipment Scheduler</title>
 <style>
   :root {
     --bg:        #F0F2F5;
@@ -144,7 +144,7 @@
         <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
       </svg>
     </div>
-    <h1>Lab Equipment Scheduler</h1>
+    <h1>Basu Lab Equipment Scheduler</h1>
     <p>Enter the lab password to continue</p>
     <input type="password" id="pw-input" placeholder="Password" autocomplete="current-password"/>
     <div class="lock-error" id="pw-error"></div>
@@ -298,21 +298,7 @@ let weekOffset = 0;
 let viewingBookingId = null;
 
 // ── LIVE LISTENERS ────────────────────────────────────────
-onValue(ref(db, "equipment"), snap => {
-  equipment = [];
-  if (snap.exists()) {
-    snap.forEach(child => equipment.push({ id: child.key, ...child.val() }));
-  }
-  renderSidebar();
-  renderCalendar();
-});
-
-onValue(ref(db, "bookings"), snap => {
-  bookings = snap.exists() ? snap.val() : {};
-  renderCalendar();
-});
-
-// hide loading, show lock/app
+// hide loading, show lock/app — listeners attach after
 setTimeout(() => {
   document.getElementById("loading").style.display = "none";
   if (sessionStorage.getItem("lab_auth") === "1") {
@@ -320,7 +306,24 @@ setTimeout(() => {
   } else {
     document.getElementById("lock-screen").style.display = "flex";
   }
+  startListeners();
 }, 800);
+
+function startListeners() {
+  onValue(ref(db, "equipment"), snap => {
+    equipment = [];
+    if (snap.exists()) {
+      snap.forEach(child => equipment.push({ id: child.key, ...child.val() }));
+    }
+    renderSidebar();
+    renderCalendar();
+  });
+
+  onValue(ref(db, "bookings"), snap => {
+    bookings = snap.exists() ? snap.val() : {};
+    renderCalendar();
+  });
+}
 
 // ── PASSWORD ──────────────────────────────────────────────
 window.checkPassword = function() {
@@ -361,14 +364,18 @@ function renderSidebar() {
   }).join("");
 }
 
+let addingEquipment = false;
 window.addEquipment = async function() {
+  if (addingEquipment) return;
   const inp  = document.getElementById("new-eq-name");
   const name = inp.value.trim();
   if (!name) return;
   if (equipment.length >= 10) { showToast("Max 10 equipment items"); return; }
-  await push(ref(db, "equipment"), { name });
+  addingEquipment = true;
   inp.value = "";
+  await push(ref(db, "equipment"), { name });
   showToast(`"${name}" added`);
+  addingEquipment = false;
 };
 
 document.getElementById("new-eq-name").addEventListener("keydown", e => {
