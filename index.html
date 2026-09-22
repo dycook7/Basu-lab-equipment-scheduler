@@ -356,9 +356,7 @@ function renderSidebar() {
     return `<div class="eq-item">
       <span class="eq-dot" style="background:${c.dot}"></span>
       <span class="eq-name">${escHtml(eq.name)}</span>
-      <button class="eq-del" onclick="deleteEquipment('${eq.id}')" title="Remove">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
+
     </div>`;
   }).join("");
 }
