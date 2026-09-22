@@ -1,989 +1,542 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Basu Lab Equipment Scheduler</title>
-  <style>
-    :root {
-      --bg: #F0F2F5;
-      --surface: #FFFFFF;
-      --border: #D8DCE3;
-      --text: #1A1D23;
-      --muted: #6B7280;
-      --accent: #2563EB;
-      --accent-dk: #1D4ED8;
-      --danger: #DC2626;
-      --radius: 6px;
-      --shadow: 0 1px 3px rgba(0, 0, 0, .10), 0 1px 2px rgba(0, 0, 0, .06);
-    }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1.5;
-      min-height: 100vh;
-    }
-
-    #lock-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-
-    .lock-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 40px 48px;
-      width: 360px;
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
-
-    .lock-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--accent);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-    }
-
-    .lock-icon svg {
-      color: #fff;
-    }
-
-    .lock-card h1 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .lock-card p {
-      color: var(--muted);
-      margin-bottom: 24px;
-      font-size: 13px;
-    }
-
-    .lock-card input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 14px;
-      margin-bottom: 12px;
-      outline: none;
-      transition: border-color .15s;
-    }
-
-    .lock-card input:focus {
-      border-color: var(--accent);
-    }
-
-    .lock-error {
-      color: var(--danger);
-      font-size: 13px;
-      margin-bottom: 10px;
-      min-height: 18px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: var(--radius);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      border: none;
-      transition: background .15s;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      width: 100%;
-      justify-content: center;
-      padding: 10px;
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-dk);
-    }
-
-    .btn-sm {
-      padding: 5px 11px;
-      font-size: 12px;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--muted);
-      border: 1px solid var(--border);
-    }
-
-    .btn-ghost:hover {
-      background: var(--bg);
-    }
-
-    .btn-danger-ghost {
-      background: transparent;
-      color: var(--danger);
-      border: 1px solid #FECACA;
-    }
-
-    .btn-danger-ghost:hover {
-      background: #FEF2F2;
-    }
-
-    #app {
-      display: none;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-logo {
-      width: 32px;
-      height: 32px;
-      background: var(--accent);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .header-logo svg {
-      color: #fff;
-    }
-
-    header h1 {
-      font-size: 16px;
-      font-weight: 600;
-      flex: 1;
-    }
-
-    .header-sub {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 400;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      flex: 1;
-    }
-
-    aside {
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 20px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      position: sticky;
-      top: 56px;
-      height: calc(100vh - 56px);
-      overflow-y: auto;
-    }
-
-    .sidebar-title {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    .eq-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 8px;
-      border-radius: var(--radius);
-    }
-
-    .eq-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .eq-name {
-      font-size: 13px;
-    }
-
-    main {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .cal-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .cal-header h2 {
-      font-size: 17px;
-      font-weight: 600;
-      flex: 1;
-    }
-
-    .week-nav {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .week-nav button {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--muted);
-      transition: background .1s;
-    }
-
-    .week-nav button:hover {
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    .week-nav .today-btn {
-      width: auto;
-      padding: 0 12px;
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    .cal-grid-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-
-    .cal-grid {
-      display: grid;
-      grid-template-columns: 64px repeat(7, 1fr);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .cal-day-header {
-      padding: 10px 8px;
-      text-align: center;
-      border-right: 1px solid var(--border);
-      background: var(--bg);
-    }
-
-    .cal-day-header:last-child {
-      border-right: none;
-    }
-
-    .cal-day-header .dow {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--muted);
-    }
-
-    .cal-day-header .dom {
-      font-size: 18px;
-      font-weight: 600;
-      line-height: 1.2;
-    }
-
-    .cal-day-header.today .dom {
-      color: var(--accent);
-    }
-
-    .cal-day-header.corner {
-      background: var(--bg);
-      border-right: 1px solid var(--border);
-    }
-
-    .cal-body {
-      display: grid;
-      grid-template-columns: 64px repeat(7, 1fr);
-      max-height: calc(100vh - 230px);
-      overflow-y: auto;
-    }
-
-    .time-label {
-      padding: 0 8px;
-      text-align: right;
-      font-size: 11px;
-      color: var(--muted);
-      height: 48px;
-      display: flex;
-      align-items: flex-start;
-      padding-top: 4px;
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-
-    .day-col {
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      height: 48px;
-      position: relative;
-      cursor: pointer;
-      transition: background .1s;
-    }
-
-    .day-col:last-child {
-      border-right: none;
-    }
-
-    .day-col:hover {
-      background: #F8FAFF;
-    }
-
-    .booking-block {
-      position: absolute;
-      left: 2px;
-      right: 2px;
-      border-radius: 4px;
-      padding: 2px 5px;
-      font-size: 11px;
-      font-weight: 500;
-      overflow: hidden;
-      cursor: pointer;
-      z-index: 10;
-      line-height: 1.3;
-      border-left: 3px solid;
-    }
-
-    .booking-block:hover {
-      filter: brightness(.94);
-    }
-
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .35);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-overlay.open {
-      display: flex;
-    }
-
-    .modal {
-      background: var(--surface);
-      border-radius: 10px;
-      padding: 28px;
-      width: 420px;
-      max-width: 95vw;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
-    }
-
-    .modal h3 {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
-
-    .form-row {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 14px;
-    }
-
-    .form-row label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-    }
-
-    .form-row input,
-    .form-row select,
-    .form-row textarea {
-      padding: 9px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 14px;
-      outline: none;
-      font-family: inherit;
-      transition: border-color .15s;
-      background: var(--surface);
-    }
-
-    .form-row input:focus,
-    .form-row select:focus,
-    .form-row textarea:focus {
-      border-color: var(--accent);
-    }
-
-    .form-row textarea {
-      resize: vertical;
-      min-height: 64px;
-    }
-
-    .form-row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      margin-top: 20px;
-    }
-
-    .conflict-warn {
-      background: #FEF3C7;
-      border: 1px solid #FCD34D;
-      border-radius: var(--radius);
-      padding: 8px 12px;
-      font-size: 12px;
-      color: #92400E;
-      margin-bottom: 12px;
-      display: none;
-    }
-
-    .conflict-warn.visible {
-      display: block;
-    }
-
-    .booking-detail {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .detail-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .detail-label {
-      font-size: 12px;
-      color: var(--muted);
-      width: 80px;
-      flex-shrink: 0;
-      padding-top: 1px;
-    }
-
-    .detail-val {
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .eq-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    #toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #1A1D23;
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 13px;
-      z-index: 999;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity .2s, transform .2s;
-      pointer-events: none;
-    }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 500;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .spinner {
-      width: 28px;
-      height: 28px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basu Lab Equipment Scheduler</title>
+<style>
+  :root {
+    --bg:#F0F2F5; --surface:#FFFFFF; --border:#D8DCE3; --text:#1A1D23;
+    --muted:#6B7280; --accent:#2563EB; --accent-dk:#1D4ED8; --danger:#DC2626;
+    --radius:6px; --shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;}
+
+  #lock-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;}
+  .lock-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:40px 48px;width:360px;box-shadow:var(--shadow);text-align:center;}
+  .lock-icon{width:48px;height:48px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+  .lock-icon svg{color:#fff;}
+  .lock-card h1{font-size:20px;font-weight:600;margin-bottom:4px;}
+  .lock-card p{color:var(--muted);margin-bottom:24px;font-size:13px;}
+  .lock-card input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;margin-bottom:12px;outline:none;transition:border-color .15s;}
+  .lock-card input:focus{border-color:var(--accent);}
+  .lock-error{color:var(--danger);font-size:13px;margin-bottom:10px;min-height:18px;}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:background .15s;}
+  .btn-primary{background:var(--accent);color:#fff;width:100%;justify-content:center;padding:10px;}
+  .btn-primary:hover{background:var(--accent-dk);}
+  .btn-sm{padding:5px 11px;font-size:12px;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-ghost:hover{background:var(--bg);}
+  .btn-danger-ghost{background:transparent;color:var(--danger);border:1px solid #FECACA;}
+  .btn-danger-ghost:hover{background:#FEF2F2;}
+
+  #app{display:none;flex-direction:column;min-height:100vh;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+  .header-logo{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .header-logo svg{color:#fff;}
+  header h1{font-size:16px;font-weight:600;flex:1;}
+  .header-sub{font-size:12px;color:var(--muted);font-weight:400;}
+  .layout{display:grid;grid-template-columns:220px 1fr;flex:1;}
+
+  aside{background:var(--surface);border-right:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+  .sidebar-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;}
+  .eq-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius);}
+  .eq-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .eq-name{font-size:13px;}
+
+  main{padding:24px;display:flex;flex-direction:column;gap:20px;}
+  .cal-header{display:flex;align-items:center;gap:12px;}
+  .cal-header h2{font-size:17px;font-weight:600;flex:1;}
+  .week-nav{display:flex;align-items:center;gap:4px;}
+  .week-nav button{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:background .1s;}
+  .week-nav button:hover{background:var(--bg);color:var(--text);}
+  .week-nav .today-btn{width:auto;padding:0 12px;font-size:13px;color:var(--text);}
+
+  .cal-grid-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--shadow);}
+  .cal-grid{display:grid;grid-template-columns:64px repeat(7,1fr);border-bottom:1px solid var(--border);}
+  .cal-day-header{padding:10px 8px;text-align:center;border-right:1px solid var(--border);background:var(--bg);}
+  .cal-day-header:last-child{border-right:none;}
+  .cal-day-header .dow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .cal-day-header .dom{font-size:18px;font-weight:600;line-height:1.2;}
+  .cal-day-header.today .dom{color:var(--accent);}
+  .cal-day-header.corner{background:var(--bg);border-right:1px solid var(--border);}
+  .cal-body{display:grid;grid-template-columns:64px repeat(7,1fr);max-height:calc(100vh - 230px);overflow-y:auto;}
+  .time-label{padding:0 8px;text-align:right;font-size:11px;color:var(--muted);height:48px;display:flex;align-items:flex-start;padding-top:4px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface);}
+  .day-col{border-right:1px solid var(--border);border-bottom:1px solid var(--border);height:48px;position:relative;cursor:pointer;transition:background .1s;}
+  .day-col:last-child{border-right:none;}
+  .day-col:hover{background:#F8FAFF;}
+  .booking-block{position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 5px;font-size:11px;font-weight:500;overflow:hidden;cursor:pointer;z-index:10;line-height:1.3;border-left:3px solid;}
+  .booking-block:hover{filter:brightness(.94);}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:10px;padding:28px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+  .modal h3{font-size:17px;font-weight:600;margin-bottom:20px;}
+  .form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;}
+  .form-row label{font-size:12px;font-weight:500;color:var(--muted);}
+  .form-row input,.form-row select,.form-row textarea{padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;outline:none;font-family:inherit;transition:border-color .15s;background:var(--surface);}
+  .form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent);}
+  .form-row textarea{resize:vertical;min-height:64px;}
+  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+  .conflict-warn{background:#FEF3C7;border:1px solid #FCD34D;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:#92400E;margin-bottom:12px;display:none;}
+  .conflict-warn.visible{display:block;}
+  .booking-detail{display:flex;flex-direction:column;gap:10px;}
+  .detail-row{display:flex;gap:8px;}
+  .detail-label{font-size:12px;color:var(--muted);width:80px;flex-shrink:0;padding-top:1px;}
+  .detail-val{font-size:14px;font-weight:500;}
+  .eq-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500;}
+
+  #toast{position:fixed;bottom:24px;right:24px;background:#1A1D23;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none;}
+  #toast.show{opacity:1;transform:translateY(0);}
+  .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:12px;}
+  .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
 </head>
-
 <body>
 
-  <div class="loading-overlay" id="loading">
-    <div class="spinner"></div>
-    <span style="font-size:13px;color:var(--muted)">Connecting…</span>
-  </div>
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <span style="font-size:13px;color:var(--muted)">Connecting…</span>
+</div>
 
-  <div id="lock-screen" style="display:none">
-    <div class="lock-card">
-      <div class="lock-icon">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-      </div>
-      <h1>Basu Lab Equipment Scheduler</h1>
-      <p>Enter the lab password to continue</p>
-      <input type="password" id="pw-input" placeholder="Password" autocomplete="current-password" />
-      <div class="lock-error" id="pw-error"></div>
-      <button class="btn btn-primary" onclick="checkPassword()">Enter</button>
+<div id="lock-screen" style="display:none">
+  <div class="lock-card">
+    <div class="lock-icon">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
     </div>
+    <h1>Basu Lab Equipment Scheduler</h1>
+    <p>Enter the lab password to continue</p>
+    <input type="password" id="pw-input" placeholder="Password" autocomplete="current-password"/>
+    <div class="lock-error" id="pw-error"></div>
+    <button class="btn btn-primary" onclick="checkPassword()">Enter</button>
   </div>
+</div>
 
-  <div id="app">
-    <header>
-      <div class="header-logo">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path
-            d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
-        </svg>
-      </div>
-      <h1>Lab Scheduler <span class="header-sub" id="header-week-label"></span></h1>
-      <button class="btn btn-ghost btn-sm" onclick="openBookingModal()">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M12 5v14m-7-7h14" />
-        </svg>
-        New booking
-      </button>
-    </header>
-    <div class="layout">
-      <aside>
-        <div class="sidebar-title">Equipment</div>
-        <div id="eq-list"></div>
-      </aside>
-      <main>
-        <div class="cal-header">
-          <h2 id="week-title"></h2>
-          <div class="week-nav">
-            <button onclick="changeWeek(-1)">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <button class="today-btn" onclick="goToToday()">Today</button>
-            <button onclick="changeWeek(1)">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="cal-grid-wrap">
-          <div class="cal-grid" id="cal-headers"></div>
-          <div class="cal-body" id="cal-body"></div>
-        </div>
-      </main>
+<div id="app">
+  <header>
+    <div class="header-logo">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
+      </svg>
     </div>
-  </div>
-
-  <div class="modal-overlay" id="booking-modal">
-    <div class="modal">
-      <h3>New Booking</h3>
-      <div class="form-row">
-        <label>Your name</label>
-        <input type="text" id="b-name" placeholder="e.g. Dr. Smith" />
-      </div>
-      <div class="form-row">
-        <label>Equipment</label>
-        <select id="b-equip"></select>
-      </div>
-      <div class="form-row-2">
-        <div class="form-row" style="margin:0">
-          <label>Date</label>
-          <input type="date" id="b-date" />
-        </div>
-        <div class="form-row" style="margin:0">
-          <label>Start time</label>
-          <input type="time" id="b-start" />
+    <h1>Basu Lab Scheduler <span class="header-sub" id="header-week-label"></span></h1>
+    <button class="btn btn-ghost btn-sm" onclick="openBookingModal()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m-7-7h14"/></svg>
+      New booking
+    </button>
+  </header>
+  <div class="layout">
+    <aside>
+      <div class="sidebar-title">Equipment</div>
+      <div id="eq-list"></div>
+    </aside>
+    <main>
+      <div class="cal-header">
+        <h2 id="week-title"></h2>
+        <div class="week-nav">
+          <button onclick="changeWeek(-1)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="today-btn" onclick="goToToday()">Today</button>
+          <button onclick="changeWeek(1)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
         </div>
       </div>
-      <div class="form-row" style="margin-top:14px">
-        <label>Duration</label>
-        <select id="b-duration">
-          <option value="0.5">30 minutes</option>
-          <option value="1" selected>1 hour</option>
-          <option value="1.5">1.5 hours</option>
-          <option value="2">2 hours</option>
-          <option value="3">3 hours</option>
-          <option value="4">4 hours</option>
-          <option value="6">6 hours</option>
-          <option value="8">8 hours (full day)</option>
-        </select>
+      <div class="cal-grid-wrap">
+        <div class="cal-grid" id="cal-headers"></div>
+        <div class="cal-body" id="cal-body"></div>
       </div>
-      <div class="form-row">
-        <label>Notes (optional)</label>
-        <textarea id="b-notes" placeholder="Experiment details, special setup…"></textarea>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="booking-modal">
+  <div class="modal">
+    <h3>New Booking</h3>
+    <div class="form-row">
+      <label>Your name</label>
+      <input type="text" id="b-name" placeholder="e.g. Dr. Smith"/>
+    </div>
+    <div class="form-row">
+      <label>Equipment</label>
+      <select id="b-equip"></select>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin:0">
+        <label>Date</label>
+        <input type="date" id="b-date"/>
       </div>
-      <div class="conflict-warn" id="conflict-warn">⚠️ This time slot overlaps with an existing booking for this
-        equipment.</div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeBookingModal()">Cancel</button>
-        <button class="btn btn-primary" style="width:auto;padding:8px 20px" onclick="saveBooking()">Save
-          booking</button>
+      <div class="form-row" style="margin:0">
+        <label>Start time</label>
+        <input type="time" id="b-start"/>
       </div>
     </div>
-  </div>
-
-  <div class="modal-overlay" id="view-modal">
-    <div class="modal">
-      <h3>Booking details</h3>
-      <div class="booking-detail" id="view-details"></div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
-        <button class="btn btn-danger-ghost btn-sm" onclick="deleteCurrentBooking()">Cancel booking</button>
-      </div>
+    <div class="form-row" style="margin-top:14px">
+      <label>Duration</label>
+      <select id="b-duration">
+        <option value="0.5">30 minutes</option>
+        <option value="1" selected>1 hour</option>
+        <option value="1.5">1.5 hours</option>
+        <option value="2">2 hours</option>
+        <option value="3">3 hours</option>
+        <option value="4">4 hours</option>
+        <option value="6">6 hours</option>
+        <option value="8">8 hours (full day)</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Notes (optional)</label>
+      <textarea id="b-notes" placeholder="Experiment details, special setup…"></textarea>
+    </div>
+    <div class="conflict-warn" id="conflict-warn">⚠️ This time slot overlaps with an existing booking for this equipment.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBookingModal()">Cancel</button>
+      <button class="btn btn-primary" style="width:auto;padding:8px 20px" onclick="saveBooking()">Save booking</button>
     </div>
   </div>
+</div>
 
-  <div id="toast"></div>
+<div class="modal-overlay" id="view-modal">
+  <div class="modal">
+    <h3>Booking details</h3>
+    <div class="booking-detail" id="view-details"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
+      <button class="btn btn-danger-ghost btn-sm" onclick="deleteCurrentBooking()">Cancel booking</button>
+    </div>
+  </div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<div id="toast"></div>
 
-    // ── PASSWORD ──────────────────────────────────────────────
-    const PASSWORD = "Drop-seq"; // ← change this
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    // ── EQUIPMENT (hard-coded) ────────────────────────────────
-    const EQUIPMENT = [
-      { id: "eq0", name: "TC Hood" },
-      { id: "eq1", name: "Dr. Evil" },
-      { id: "eq2", name: "Scott Evil / Raman Microscope" },
-      { id: "eq3", name: "Mini Me" },
-      { id: "eq4", name: "Number 2" },
-      { id: "eq5", name: "qPCR" },
-      { id: "eq6", name: "10x Chromium X" },
-      { id: "eq7", name: "Thermocycler 1" },
-      { id: "eq8", name: "Thermocycler 2" },
-      { id: "eq9", name: "Thermocycler 3" },
-    ];
+// ── PASSWORD ──────────────────────────────────────────────
+const PASSWORD = "Drop-seq";
 
-    const COLORS = [
-      { dot: "#2563EB", bg: "#DBEAFE" },
-      { dot: "#7C3AED", bg: "#EDE9FE" },
-      { dot: "#DB2777", bg: "#FCE7F3" },
-      { dot: "#D97706", bg: "#FEF3C7" },
-      { dot: "#059669", bg: "#D1FAE5" },
-      { dot: "#0891B2", bg: "#CFFAFE" },
-      { dot: "#65A30D", bg: "#ECFCCB" },
-      { dot: "#E11D48", bg: "#FFE4E6" },
-      { dot: "#9333EA", bg: "#F3E8FF" },
-      { dot: "#0D9488", bg: "#CCFBF1" },
-    ];
+// ── EQUIPMENT (hard-coded) ────────────────────────────────
+const EQUIPMENT = [
+  { id:"eq0",  name:"TC Hood" },
+  { id:"eq1",  name:"Dr. Evil" },
+  { id:"eq2",  name:"Scott Evil / Raman Microscope" },
+  { id:"eq3",  name:"Mini Me" },
+  { id:"eq4",  name:"Number 2" },
+  { id:"eq5",  name:"qPCR" },
+  { id:"eq6",  name:"10x Chromium X" },
+  { id:"eq7",  name:"Thermocycler 1" },
+  { id:"eq8",  name:"Thermocycler 2" },
+  { id:"eq9",  name:"Thermocycler 3" },
+];
 
-    const HOURS_START = 7, HOURS_END = 22;
+const COLORS = [
+  { dot:"#2563EB", bg:"#DBEAFE" },
+  { dot:"#7C3AED", bg:"#EDE9FE" },
+  { dot:"#DB2777", bg:"#FCE7F3" },
+  { dot:"#D97706", bg:"#FEF3C7" },
+  { dot:"#059669", bg:"#D1FAE5" },
+  { dot:"#0891B2", bg:"#CFFAFE" },
+  { dot:"#65A30D", bg:"#ECFCCB" },
+  { dot:"#E11D48", bg:"#FFE4E6" },
+  { dot:"#9333EA", bg:"#F3E8FF" },
+  { dot:"#0D9488", bg:"#CCFBF1" },
+];
 
-    // ── FIREBASE ──────────────────────────────────────────────
-    const fbApp = initializeApp({ databaseURL: "https://lab-scheduler-99190-default-rtdb.firebaseio.com" });
-    const db = getDatabase(fbApp);
+const HOURS_START = 7, HOURS_END = 22;
 
-    let bookings = {};
-    let weekOffset = 0;
-    let viewingBookingId = null;
+// ── FIREBASE ──────────────────────────────────────────────
+const fbApp = initializeApp({ databaseURL: "https://lab-scheduler-99190-default-rtdb.firebaseio.com" });
+const db = getDatabase(fbApp);
 
-    // ── BOOT ──────────────────────────────────────────────────
-    function eqColor(idx) { return COLORS[idx % COLORS.length]; }
-    function eqById(id) { return EQUIPMENT.find(e => e.id === id); }
-    function eqIdxById(id) { return EQUIPMENT.findIndex(e => e.id === id); }
+let bookings = {};
+let weekOffset = 0;
+let viewingBookingId = null;
 
-    function escHtml(s) {
-      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
+// ── BOOT ──────────────────────────────────────────────────
+function eqColor(idx) { return COLORS[idx % COLORS.length]; }
+function eqById(id)   { return EQUIPMENT.find(e => e.id === id); }
+function eqIdxById(id){ return EQUIPMENT.findIndex(e => e.id === id); }
 
-    let toastTimer;
-    function showToast(msg) {
-      const t = document.getElementById("toast");
-      t.textContent = msg;
-      t.classList.add("show");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.remove("show"), 2500);
-    }
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
 
-    // Render sidebar once (static)
-    function renderSidebar() {
-      const list = document.getElementById("eq-list");
-      list.innerHTML = EQUIPMENT.map((eq, i) => {
-        const c = eqColor(i);
-        return `<div class="eq-item">
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// Render sidebar once (static)
+function renderSidebar() {
+  const list = document.getElementById("eq-list");
+  list.innerHTML = EQUIPMENT.map((eq, i) => {
+    const c = eqColor(i);
+    return `<div class="eq-item">
       <span class="eq-dot" style="background:${c.dot}"></span>
       <span class="eq-name">${escHtml(eq.name)}</span>
     </div>`;
-      }).join("");
-    }
+  }).join("");
+}
 
-    // ── PASSWORD ──────────────────────────────────────────────
-    window.checkPassword = function () {
-      const val = document.getElementById("pw-input").value;
-      if (val === PASSWORD) {
-        sessionStorage.setItem("lab_auth", "1");
-        document.getElementById("lock-screen").style.display = "none";
-        document.getElementById("app").style.display = "flex";
-        renderSidebar();
-        startFirebase();
-      } else {
-        const el = document.getElementById("pw-error");
-        el.textContent = "Incorrect password. Try again.";
-        document.getElementById("pw-input").value = "";
-        document.getElementById("pw-input").focus();
-        setTimeout(() => el.textContent = "", 3000);
-      }
-    };
+// ── PASSWORD ──────────────────────────────────────────────
+window.checkPassword = function() {
+  const val = document.getElementById("pw-input").value;
+  if (val === PASSWORD) {
+    sessionStorage.setItem("lab_auth","1");
+    document.getElementById("lock-screen").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+    renderSidebar();
+    startFirebase();
+  } else {
+    const el = document.getElementById("pw-error");
+    el.textContent = "Incorrect password. Try again.";
+    document.getElementById("pw-input").value = "";
+    document.getElementById("pw-input").focus();
+    setTimeout(() => el.textContent = "", 3000);
+  }
+};
 
-    document.getElementById("pw-input").addEventListener("keydown", e => {
-      if (e.key === "Enter") window.checkPassword();
-    });
+document.getElementById("pw-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") window.checkPassword();
+});
 
-    // ── INIT ──────────────────────────────────────────────────
-    document.getElementById("loading").style.display = "none";
-    if (sessionStorage.getItem("lab_auth") === "1") {
-      document.getElementById("lock-screen").style.display = "none";
-      document.getElementById("app").style.display = "flex";
-      renderSidebar();
-      startFirebase();
-    } else {
-      document.getElementById("lock-screen").style.display = "flex";
-    }
+// ── INIT ──────────────────────────────────────────────────
+document.getElementById("loading").style.display = "none";
+if (sessionStorage.getItem("lab_auth") === "1") {
+  document.getElementById("lock-screen").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+  renderSidebar();
+  startFirebase();
+} else {
+  document.getElementById("lock-screen").style.display = "flex";
+}
 
-    function startFirebase() {
-      onValue(ref(db, "bookings"), snap => {
-        bookings = snap.exists() ? snap.val() : {};
-        renderCalendar();
-      });
-    }
+function startFirebase() {
+  onValue(ref(db, "bookings"), snap => {
+    bookings = snap.exists() ? snap.val() : {};
+    renderCalendar();
+  });
+}
 
-    // ── CALENDAR ──────────────────────────────────────────────
-    function getWeekDates(offset) {
-      const now = new Date();
-      const monday = new Date(now);
-      monday.setDate(now.getDate() - ((now.getDay() + 6) % 7) + offset * 7);
-      monday.setHours(0, 0, 0, 0);
-      return Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(monday);
-        d.setDate(monday.getDate() + i);
-        return d;
-      });
-    }
+// ── CALENDAR ──────────────────────────────────────────────
+function getWeekDates(offset) {
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7) + offset * 7);
+  monday.setHours(0,0,0,0);
+  return Array.from({length:7}, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
 
-    function dateKey(d) { return d.toISOString().slice(0, 10); }
-    function fmt12(h, m) {
-      return `${h % 12 || 12}:${String(m).padStart(2, "0")}${h >= 12 ? "pm" : "am"}`;
-    }
+function dateKey(d) { return d.toISOString().slice(0,10); }
+function fmt12(h, m) {
+  return `${h%12||12}:${String(m).padStart(2,"0")}${h>=12?"pm":"am"}`;
+}
 
-    window.changeWeek = d => { weekOffset += d; renderCalendar(); };
-    window.goToToday = () => { weekOffset = 0; renderCalendar(); };
+window.changeWeek = d => { weekOffset += d; renderCalendar(); };
+window.goToToday  = () => { weekOffset = 0;  renderCalendar(); };
 
-    function renderCalendar() {
-      const days = getWeekDates(weekOffset);
-      const today = dateKey(new Date());
-      const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      const opts = { month: "long", day: "numeric" };
+function renderCalendar() {
+  const days  = getWeekDates(weekOffset);
+  const today = dateKey(new Date());
+  const DOW   = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const opts  = { month:"long", day:"numeric" };
 
-      document.getElementById("week-title").textContent =
-        `${days[0].toLocaleDateString("en-US", opts)} – ${days[6].toLocaleDateString("en-US", opts)}, ${days[0].getFullYear()}`;
-      document.getElementById("header-week-label").textContent = weekOffset === 0 ? "· This week" : "";
+  document.getElementById("week-title").textContent =
+    `${days[0].toLocaleDateString("en-US",opts)} – ${days[6].toLocaleDateString("en-US",opts)}, ${days[0].getFullYear()}`;
+  document.getElementById("header-week-label").textContent = weekOffset===0 ? "· This week" : "";
 
-      document.getElementById("cal-headers").innerHTML =
-        `<div class="cal-day-header corner"></div>` +
-        days.map((d, i) => `<div class="cal-day-header${dateKey(d) === today ? " today" : ""}">
+  document.getElementById("cal-headers").innerHTML =
+    `<div class="cal-day-header corner"></div>` +
+    days.map((d,i) => `<div class="cal-day-header${dateKey(d)===today?" today":""}">
       <div class="dow">${DOW[i]}</div><div class="dom">${d.getDate()}</div>
     </div>`).join("");
 
-      const body = document.getElementById("cal-body");
-      let html = "";
-      for (let h = HOURS_START; h < HOURS_END; h++) {
-        html += `<div class="time-label">${fmt12(h, 0)}</div>`;
-        for (let di = 0; di < 7; di++) {
-          html += `<div class="day-col" data-date="${dateKey(days[di])}" data-hour="${h}" onclick="handleColClick(this)"></div>`;
-        }
-      }
-      body.innerHTML = html;
-
-      const hourPx = 48;
-      Object.entries(bookings).forEach(([bid, b]) => {
-        const eqIdx = eqIdxById(b.equipId);
-        if (eqIdx === -1) return;
-        const c = eqColor(eqIdx);
-        const eq = EQUIPMENT[eqIdx];
-        const col = body.querySelector(`.day-col[data-date="${b.date}"][data-hour="${b.startHour}"]`);
-        if (!col) return;
-        const top = b.startMin / 60 * hourPx;
-        const height = Math.max(b.durationH * hourPx - 2, 14);
-        const block = document.createElement("div");
-        block.className = "booking-block";
-        block.style.cssText = `top:${top}px;height:${height}px;background:${c.bg};border-left-color:${c.dot};color:${c.dot}`;
-        block.innerHTML = `<strong>${escHtml(eq.name)}</strong><br>${escHtml(b.name)}`;
-        block.addEventListener("click", e => { e.stopPropagation(); openViewModal(bid); });
-        col.appendChild(block);
-      });
+  const body = document.getElementById("cal-body");
+  let html = "";
+  for (let h = HOURS_START; h < HOURS_END; h++) {
+    html += `<div class="time-label">${fmt12(h,0)}</div>`;
+    for (let di = 0; di < 7; di++) {
+      html += `<div class="day-col" data-date="${dateKey(days[di])}" data-hour="${h}" onclick="handleColClick(this)"></div>`;
     }
+  }
+  body.innerHTML = html;
 
-    // ── BOOKING MODAL ─────────────────────────────────────────
-    window.handleColClick = function (el) {
-      openBookingModal(el.dataset.date, parseInt(el.dataset.hour));
-    };
+  const hourPx = 48;
 
-    window.openBookingModal = function (date, hour) {
-      document.getElementById("b-equip").innerHTML =
-        EQUIPMENT.map(e => `<option value="${e.id}">${escHtml(e.name)}</option>`).join("");
-      document.getElementById("b-date").value = date || dateKey(new Date());
-      document.getElementById("b-start").value = hour !== undefined ? `${String(hour).padStart(2, "0")}:00` : "09:00";
-      document.getElementById("b-name").value = "";
-      document.getElementById("b-notes").value = "";
-      document.getElementById("conflict-warn").classList.remove("visible");
-      document.getElementById("booking-modal").classList.add("open");
-      document.getElementById("b-name").focus();
-    };
+  // Group bookings by date
+  const byDate = {};
+  Object.entries(bookings).forEach(([bid, b]) => {
+    if (!byDate[b.date]) byDate[b.date] = [];
+    byDate[b.date].push({ bid, b });
+  });
 
-    window.closeBookingModal = function () {
-      document.getElementById("booking-modal").classList.remove("open");
-    };
+  // For each date, compute overlap columns so blocks sit side by side
+  Object.entries(byDate).forEach(([date, entries]) => {
+    // Convert each booking to a time interval in minutes
+    const intervals = entries.map(({ bid, b }) => ({
+      bid, b,
+      start: b.startHour * 60 + b.startMin,
+      end:   b.startHour * 60 + b.startMin + b.durationH * 60,
+      col: 0, totalCols: 1
+    }));
 
-    window.saveBooking = async function () {
-      const name = document.getElementById("b-name").value.trim();
-      const equipId = document.getElementById("b-equip").value;
-      const date = document.getElementById("b-date").value;
-      const start = document.getElementById("b-start").value;
-      const durH = parseFloat(document.getElementById("b-duration").value);
-      const notes = document.getElementById("b-notes").value.trim();
+    // Assign visual columns greedily
+    const placed = [];
+    intervals.forEach(item => {
+      // find which col slots are taken by overlapping items
+      const takenCols = placed
+        .filter(p => p.start < item.end && p.end > item.start)
+        .map(p => p.col);
+      let c = 0;
+      while (takenCols.includes(c)) c++;
+      item.col = c;
+      placed.push(item);
+    });
 
-      if (!name) { alert("Please enter your name."); return; }
-      if (!date) { alert("Please select a date."); return; }
-      if (!start) { alert("Please select a start time."); return; }
+    // totalCols per item = max col+1 among all overlapping neighbours
+    intervals.forEach(item => {
+      const overlapping = intervals.filter(
+        o => o !== item && o.start < item.end && o.end > item.start
+      );
+      item.totalCols = overlapping.length > 0
+        ? Math.max(...overlapping.map(o => o.col), item.col) + 1
+        : 1;
+    });
 
-      const [sh, sm] = start.split(":").map(Number);
-
-      const conflict = Object.values(bookings).find(b => {
-        if (b.equipId !== equipId || b.date !== date) return false;
-        const bS = b.startHour * 60 + b.startMin, bE = bS + b.durationH * 60;
-        const nS = sh * 60 + sm, nE = nS + durH * 60;
-        return nS < bE && nE > bS;
-      });
-
-      document.getElementById("conflict-warn").classList.toggle("visible", !!conflict);
-      if (conflict) return;
-
-      await push(ref(db, "bookings"), { name, equipId, date, startHour: sh, startMin: sm, durationH: durH, notes });
-      window.closeBookingModal();
-      showToast("Booking saved!");
-    };
-
-    // ── VIEW MODAL ────────────────────────────────────────────
-    window.openViewModal = function (id) {
-      const b = bookings[id];
-      if (!b) return;
+    // Render
+    intervals.forEach(({ bid, b, col, totalCols }) => {
       const eqIdx = eqIdxById(b.equipId);
-      const eq = eqIdx !== -1 ? EQUIPMENT[eqIdx] : { name: "Unknown" };
-      const c = eqIdx !== -1 ? eqColor(eqIdx) : { bg: "#eee", dot: "#999" };
-      const endMin = b.startHour * 60 + b.startMin + b.durationH * 60;
-      const timeStr = `${fmt12(b.startHour, b.startMin)} – ${fmt12(Math.floor(endMin / 60), endMin % 60)}`;
-      const dateObj = new Date(b.date + "T00:00:00");
+      if (eqIdx === -1) return;
+      const c  = eqColor(eqIdx);
+      const eq = EQUIPMENT[eqIdx];
+      const dayCol = body.querySelector(`.day-col[data-date="${date}"][data-hour="${b.startHour}"]`);
+      if (!dayCol) return;
 
-      document.getElementById("view-details").innerHTML = `
+      const top    = b.startMin / 60 * hourPx;
+      const height = Math.max(b.durationH * hourPx - 2, 14);
+      const pct    = 100 / totalCols;
+      const left   = `calc(${col * pct}% + 2px)`;
+      const width  = `calc(${pct}% - 4px)`;
+
+      const block = document.createElement("div");
+      block.className = "booking-block";
+      block.style.cssText = `top:${top}px;height:${height}px;left:${left};width:${width};right:auto;background:${c.bg};border-left-color:${c.dot};color:${c.dot}`;
+      block.innerHTML = `<strong>${escHtml(eq.name)}</strong><br>${escHtml(b.name)}`;
+      block.addEventListener("click", e => { e.stopPropagation(); openViewModal(bid); });
+      dayCol.appendChild(block);
+    });
+  });
+}
+
+// ── BOOKING MODAL ─────────────────────────────────────────
+window.handleColClick = function(el) {
+  openBookingModal(el.dataset.date, parseInt(el.dataset.hour));
+};
+
+window.openBookingModal = function(date, hour) {
+  document.getElementById("b-equip").innerHTML =
+    EQUIPMENT.map(e => `<option value="${e.id}">${escHtml(e.name)}</option>`).join("");
+  document.getElementById("b-date").value  = date || dateKey(new Date());
+  document.getElementById("b-start").value = hour !== undefined ? `${String(hour).padStart(2,"0")}:00` : "09:00";
+  document.getElementById("b-name").value  = "";
+  document.getElementById("b-notes").value = "";
+  document.getElementById("conflict-warn").classList.remove("visible");
+  document.getElementById("booking-modal").classList.add("open");
+  document.getElementById("b-name").focus();
+};
+
+window.closeBookingModal = function() {
+  document.getElementById("booking-modal").classList.remove("open");
+};
+
+window.saveBooking = async function() {
+  const name    = document.getElementById("b-name").value.trim();
+  const equipId = document.getElementById("b-equip").value;
+  const date    = document.getElementById("b-date").value;
+  const start   = document.getElementById("b-start").value;
+  const durH    = parseFloat(document.getElementById("b-duration").value);
+  const notes   = document.getElementById("b-notes").value.trim();
+
+  if (!name)  { alert("Please enter your name.");     return; }
+  if (!date)  { alert("Please select a date.");       return; }
+  if (!start) { alert("Please select a start time."); return; }
+
+  const [sh, sm] = start.split(":").map(Number);
+
+  const conflict = Object.values(bookings).find(b => {
+    if (b.equipId !== equipId || b.date !== date) return false;
+    const bS = b.startHour*60+b.startMin, bE = bS+b.durationH*60;
+    const nS = sh*60+sm,                  nE = nS+durH*60;
+    return nS < bE && nE > bS;
+  });
+
+  document.getElementById("conflict-warn").classList.toggle("visible", !!conflict);
+  if (conflict) return;
+
+  await push(ref(db,"bookings"), { name, equipId, date, startHour:sh, startMin:sm, durationH:durH, notes });
+  window.closeBookingModal();
+  showToast("Booking saved!");
+};
+
+// ── VIEW MODAL ────────────────────────────────────────────
+window.openViewModal = function(id) {
+  const b = bookings[id];
+  if (!b) return;
+  const eqIdx = eqIdxById(b.equipId);
+  const eq    = eqIdx !== -1 ? EQUIPMENT[eqIdx] : { name:"Unknown" };
+  const c     = eqIdx !== -1 ? eqColor(eqIdx)   : { bg:"#eee", dot:"#999" };
+  const endMin = b.startHour*60 + b.startMin + b.durationH*60;
+  const timeStr = `${fmt12(b.startHour,b.startMin)} – ${fmt12(Math.floor(endMin/60),endMin%60)}`;
+  const dateObj = new Date(b.date+"T00:00:00");
+
+  document.getElementById("view-details").innerHTML = `
     <div class="detail-row"><span class="detail-label">Equipment</span>
       <span class="detail-val"><span class="eq-badge" style="background:${c.bg};color:${c.dot}">
         <span style="width:7px;height:7px;border-radius:50%;background:${c.dot};display:inline-block"></span>
         ${escHtml(eq.name)}</span></span></div>
     <div class="detail-row"><span class="detail-label">Booked by</span><span class="detail-val">${escHtml(b.name)}</span></div>
     <div class="detail-row"><span class="detail-label">Date</span>
-      <span class="detail-val">${dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</span></div>
+      <span class="detail-val">${dateObj.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}</span></div>
     <div class="detail-row"><span class="detail-label">Time</span><span class="detail-val">${timeStr}</span></div>
-    ${b.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-val">${escHtml(b.notes)}</span></div>` : ""}
+    ${b.notes?`<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-val">${escHtml(b.notes)}</span></div>`:""}
   `;
-      viewingBookingId = id;
-      document.getElementById("view-modal").classList.add("open");
-    };
+  viewingBookingId = id;
+  document.getElementById("view-modal").classList.add("open");
+};
 
-    window.closeViewModal = function () {
-      document.getElementById("view-modal").classList.remove("open");
-      viewingBookingId = null;
-    };
+window.closeViewModal = function() {
+  document.getElementById("view-modal").classList.remove("open");
+  viewingBookingId = null;
+};
 
-    window.deleteCurrentBooking = async function () {
-      if (!viewingBookingId) return;
-      const b = bookings[viewingBookingId];
-      const eq = b ? eqById(b.equipId) : null;
-      if (!confirm(`Cancel "${eq?.name || "this"}" booked by ${b?.name || "unknown"}?`)) return;
-      await remove(ref(db, `bookings/${viewingBookingId}`));
-      window.closeViewModal();
-      showToast("Booking cancelled");
-    };
+window.deleteCurrentBooking = async function() {
+  if (!viewingBookingId) return;
+  const b  = bookings[viewingBookingId];
+  const eq = b ? eqById(b.equipId) : null;
+  if (!confirm(`Cancel "${eq?.name||"this"}" booked by ${b?.name||"unknown"}?`)) return;
+  await remove(ref(db,`bookings/${viewingBookingId}`));
+  window.closeViewModal();
+  showToast("Booking cancelled");
+};
 
-    document.getElementById("booking-modal").addEventListener("click", function (e) { if (e.target === this) window.closeBookingModal(); });
-    document.getElementById("view-modal").addEventListener("click", function (e) { if (e.target === this) window.closeViewModal(); });
-  </script>
+document.getElementById("booking-modal").addEventListener("click", function(e){ if(e.target===this) window.closeBookingModal(); });
+document.getElementById("view-modal").addEventListener("click",   function(e){ if(e.target===this) window.closeViewModal(); });
+</script>
 </body>
-
 </html>
